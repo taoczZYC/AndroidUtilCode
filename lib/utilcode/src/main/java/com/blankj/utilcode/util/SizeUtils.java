@@ -97,7 +97,7 @@ public final class SizeUtils {
      * Force get the size of view.
      * <p>e.g.</p>
      * <pre>
-     * SizeUtils.forceGetViewSize(view, new SizeUtils.onGetSizeListener() {
+     * SizeUtils.forceGetViewSize(view, new SizeUtils.OnGetSizeListener() {
      *     Override
      *     public void onGetSize(final View view) {
      *         view.getWidth();
@@ -108,7 +108,7 @@ public final class SizeUtils {
      * @param view     The view.
      * @param listener The get size listener.
      */
-    public static void forceGetViewSize(final View view, final onGetSizeListener listener) {
+    public static void forceGetViewSize(final View view, final OnGetSizeListener listener) {
         view.post(new Runnable() {
             @Override
             public void run() {
@@ -169,7 +169,7 @@ public final class SizeUtils {
     // interface
     ///////////////////////////////////////////////////////////////////////////
 
-    public interface onGetSizeListener {
+    public interface OnGetSizeListener {
         void onGetSize(View view);
     }
 }

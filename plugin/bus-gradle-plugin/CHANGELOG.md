@@ -1,5 +1,23 @@
 # Change Log
 
+## v2.6(2020/05/19)
+重新发布，因为上个版本从阿里云仓库拉取是有问题的
+
+## v2.5(2020/04/29)
+重构使用 base-transform
+
+## v2.4
+去除 gradle 版本依赖的问题
+
+## v2.3
+新增 onlyScanLibRegex, jumpScanLibRegex 的 DSL
+
+## v2.2
+修复含有 for 循环的字段导致 out of index 的 bug
+
+## v2.1
+支持 Tag 一对多，同 Tag 可设置事件优先级
+
 ## v2.0
 更改为 EventBus 模式
 

@@ -1,20 +1,26 @@
 package com.blankj.subutil.util;
 
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.PowerManager;
 import android.support.annotation.RequiresPermission;
+import android.telephony.SmsManager;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import android.util.Log;
 
+import com.blankj.utilcode.util.IntentUtils;
 import com.blankj.utilcode.util.ShellUtils;
 import com.blankj.utilcode.util.Utils;
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.util.List;
 
 import static android.Manifest.permission.MODIFY_PHONE_STATE;
+import static android.Manifest.permission.SEND_SMS;
 
 /**
  * <pre>
@@ -217,26 +223,40 @@ public class DangerousUtils {
      * or hold {@code android:sharedUserId="android.uid.system"},
      * {@code <uses-permission android:name="android.permission.SHUTDOWN" />}
      * in manifest.</p>
+     *
+     * @return {@code true}: success<br>{@code false}: fail
      */
-    public static void shutdown() {
-        ShellUtils.execCmd("reboot -p", true);
-        Intent intent = new Intent("android.intent.action.ACTION_REQUEST_SHUTDOWN");
-        intent.putExtra("android.intent.extra.KEY_CONFIRM", false);
-        Utils.getApp().startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+    public static boolean shutdown() {
+        try {
+            ShellUtils.CommandResult result = ShellUtils.execCmd("reboot -p", true);
+            if (result.result == 0) return true;
+            Utils.getApp().startActivity(IntentUtils.getShutdownIntent());
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
      * Reboot the device.
      * <p>Requires root permission
      * or hold {@code android:sharedUserId="android.uid.system"} in manifest.</p>
+     *
+     * @return {@code true}: success<br>{@code false}: fail
      */
-    public static void reboot() {
-        ShellUtils.execCmd("reboot", true);
-        Intent intent = new Intent(Intent.ACTION_REBOOT);
-        intent.putExtra("nowait", 1);
-        intent.putExtra("interval", 1);
-        intent.putExtra("window", 0);
-        Utils.getApp().sendBroadcast(intent);
+    public static boolean reboot() {
+        try {
+            ShellUtils.CommandResult result = ShellUtils.execCmd("reboot", true);
+            if (result.result == 0) return true;
+            Intent intent = new Intent(Intent.ACTION_REBOOT);
+            intent.putExtra("nowait", 1);
+            intent.putExtra("interval", 1);
+            intent.putExtra("window", 0);
+            Utils.getApp().sendBroadcast(intent);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
@@ -247,27 +267,38 @@ public class DangerousUtils {
      *
      * @param reason code to pass to the kernel (e.g., "recovery") to
      *               request special boot modes, or null.
+     * @return {@code true}: success<br>{@code false}: fail
      */
-    public static void reboot(final String reason) {
-        PowerManager pm = (PowerManager) Utils.getApp().getSystemService(Context.POWER_SERVICE);
-        //noinspection ConstantConditions
-        pm.reboot(reason);
+    public static boolean reboot(final String reason) {
+        try {
+            PowerManager pm = (PowerManager) Utils.getApp().getSystemService(Context.POWER_SERVICE);
+            pm.reboot(reason);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     /**
      * Reboot the device to recovery.
      * <p>Requires root permission.</p>
+     *
+     * @return {@code true}: success<br>{@code false}: fail
      */
-    public static void reboot2Recovery() {
-        ShellUtils.execCmd("reboot recovery", true);
+    public static boolean reboot2Recovery() {
+        ShellUtils.CommandResult result = ShellUtils.execCmd("reboot recovery", true);
+        return result.result == 0;
     }
 
     /**
      * Reboot the device to bootloader.
      * <p>Requires root permission.</p>
+     *
+     * @return {@code true}: success<br>{@code false}: fail
      */
-    public static void reboot2Bootloader() {
-        ShellUtils.execCmd("reboot bootloader", true);
+    public static boolean reboot2Bootloader() {
+        ShellUtils.CommandResult result = ShellUtils.execCmd("reboot bootloader", true);
+        return result.result == 0;
     }
 
 
@@ -291,13 +322,33 @@ public class DangerousUtils {
             }
             Method setDataEnabledMethod =
                     tm.getClass().getDeclaredMethod("setDataEnabled", boolean.class);
-            if (null != setDataEnabledMethod) {
-                setDataEnabledMethod.invoke(tm, enabled);
-                return true;
-            }
+            setDataEnabledMethod.invoke(tm, enabled);
+            return true;
         } catch (Exception e) {
             Log.e("NetworkUtils", "setMobileDataEnabled: ", e);
         }
         return false;
+    }
+
+    /**
+     * Send sms silently.
+     * <p>Must hold {@code <uses-permission android:name="android.permission.SEND_SMS" />}</p>
+     *
+     * @param phoneNumber The phone number.
+     * @param content     The content.
+     */
+    @RequiresPermission(SEND_SMS)
+    public static void sendSmsSilent(final String phoneNumber, final String content) {
+        if (TextUtils.isEmpty(content)) return;
+        PendingIntent sentIntent = PendingIntent.getBroadcast(Utils.getApp(), 0, new Intent("send"), 0);
+        SmsManager smsManager = SmsManager.getDefault();
+        if (content.length() >= 70) {
+            List<String> ms = smsManager.divideMessage(content);
+            for (String str : ms) {
+                smsManager.sendTextMessage(phoneNumber, null, str, sentIntent, null);
+            }
+        } else {
+            smsManager.sendTextMessage(phoneNumber, null, content, sentIntent, null);
+        }
     }
 }

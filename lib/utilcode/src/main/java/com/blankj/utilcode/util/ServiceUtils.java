@@ -5,6 +5,8 @@ import android.app.ActivityManager.RunningServiceInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
+import android.support.annotation.NonNull;
 
 import java.util.HashSet;
 import java.util.List;
@@ -30,9 +32,7 @@ public final class ServiceUtils {
      * @return all of the services are running
      */
     public static Set getAllRunningServices() {
-        ActivityManager am =
-                (ActivityManager) Utils.getApp().getSystemService(Context.ACTIVITY_SERVICE);
-        //noinspection ConstantConditions
+        ActivityManager am = (ActivityManager) Utils.getApp().getSystemService(Context.ACTIVITY_SERVICE);
         List<RunningServiceInfo> info = am.getRunningServices(0x7FFFFFFF);
         Set<String> names = new HashSet<>();
         if (info == null || info.size() == 0) return null;
@@ -47,7 +47,7 @@ public final class ServiceUtils {
      *
      * @param className The name of class.
      */
-    public static void startService(final String className) {
+    public static void startService(@NonNull final String className) {
         try {
             startService(Class.forName(className));
         } catch (Exception e) {
@@ -60,9 +60,18 @@ public final class ServiceUtils {
      *
      * @param cls The service class.
      */
-    public static void startService(final Class<?> cls) {
-        Intent intent = new Intent(Utils.getApp(), cls);
-        Utils.getApp().startService(intent);
+    public static void startService(@NonNull final Class<?> cls) {
+        try {
+            Intent intent = new Intent(Utils.getApp(), cls);
+            intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                Utils.getApp().startForegroundService(intent);
+            } else {
+                Utils.getApp().startService(intent);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -71,7 +80,7 @@ public final class ServiceUtils {
      * @param className The name of class.
      * @return {@code true}: success<br>{@code false}: fail
      */
-    public static boolean stopService(final String className) {
+    public static boolean stopService(@NonNull final String className) {
         try {
             return stopService(Class.forName(className));
         } catch (Exception e) {
@@ -86,7 +95,7 @@ public final class ServiceUtils {
      * @param cls The name of class.
      * @return {@code true}: success<br>{@code false}: fail
      */
-    public static boolean stopService(final Class<?> cls) {
+    public static boolean stopService(@NonNull final Class<?> cls) {
         Intent intent = new Intent(Utils.getApp(), cls);
         return Utils.getApp().stopService(intent);
     }
@@ -107,8 +116,8 @@ public final class ServiceUtils {
      *                  <li>{@link Context#BIND_WAIVE_PRIORITY}</li>
      *                  </ul>
      */
-    public static void bindService(final String className,
-                                   final ServiceConnection conn,
+    public static void bindService(@NonNull final String className,
+                                   @NonNull final ServiceConnection conn,
                                    final int flags) {
         try {
             bindService(Class.forName(className), conn, flags);
@@ -133,8 +142,8 @@ public final class ServiceUtils {
      *              <li>{@link Context#BIND_WAIVE_PRIORITY}</li>
      *              </ul>
      */
-    public static void bindService(final Class<?> cls,
-                                   final ServiceConnection conn,
+    public static void bindService(@NonNull final Class<?> cls,
+                                   @NonNull final ServiceConnection conn,
                                    final int flags) {
         Intent intent = new Intent(Utils.getApp(), cls);
         Utils.getApp().bindService(intent, conn, flags);
@@ -145,7 +154,7 @@ public final class ServiceUtils {
      *
      * @param conn The ServiceConnection object.
      */
-    public static void unbindService(final ServiceConnection conn) {
+    public static void unbindService(@NonNull final ServiceConnection conn) {
         Utils.getApp().unbindService(conn);
     }
 
@@ -155,7 +164,7 @@ public final class ServiceUtils {
      * @param cls The service class.
      * @return {@code true}: yes<br>{@code false}: no
      */
-    public static boolean isServiceRunning(final Class<?> cls) {
+    public static boolean isServiceRunning(@NonNull final Class<?> cls) {
         return isServiceRunning(cls.getName());
     }
 
@@ -165,15 +174,17 @@ public final class ServiceUtils {
      * @param className The name of class.
      * @return {@code true}: yes<br>{@code false}: no
      */
-    public static boolean isServiceRunning(final String className) {
-        ActivityManager am =
-                (ActivityManager) Utils.getApp().getSystemService(Context.ACTIVITY_SERVICE);
-        //noinspection ConstantConditions
-        List<RunningServiceInfo> info = am.getRunningServices(0x7FFFFFFF);
-        if (info == null || info.size() == 0) return false;
-        for (RunningServiceInfo aInfo : info) {
-            if (className.equals(aInfo.service.getClassName())) return true;
+    public static boolean isServiceRunning(@NonNull final String className) {
+        try {
+            ActivityManager am = (ActivityManager) Utils.getApp().getSystemService(Context.ACTIVITY_SERVICE);
+            List<RunningServiceInfo> info = am.getRunningServices(0x7FFFFFFF);
+            if (info == null || info.size() == 0) return false;
+            for (RunningServiceInfo aInfo : info) {
+                if (className.equals(aInfo.service.getClassName())) return true;
+            }
+            return false;
+        } catch (Exception ignore) {
+            return false;
         }
-        return false;
     }
 }

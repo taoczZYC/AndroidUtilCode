@@ -16,17 +16,17 @@ public final class RegexConstants {
     public static final String REGEX_MOBILE_SIMPLE = "^[1]\\d{10}$";
     /**
      * Regex of exact mobile.
-     * <p>china mobile: 134(0-8), 135, 136, 137, 138, 139, 147, 150, 151, 152, 157, 158, 159, 178, 182, 183, 184, 187, 188, 198</p>
-     * <p>china unicom: 130, 131, 132, 145, 155, 156, 166, 171, 175, 176, 185, 186</p>
-     * <p>china telecom: 133, 153, 173, 177, 180, 181, 189, 199, 191</p>
+     * <p>china mobile: 134(0-8), 135, 136, 137, 138, 139, 147, 150, 151, 152, 157, 158, 159, 165, 172, 178, 182, 183, 184, 187, 188, 198</p>
+     * <p>china unicom: 130, 131, 132, 145, 155, 156, 166, 167, 171, 175, 176, 185, 186</p>
+     * <p>china telecom: 133, 153, 162, 173, 177, 180, 181, 189, 199, 191</p>
      * <p>global star: 1349</p>
      * <p>virtual operator: 170</p>
      */
-    public static final String REGEX_MOBILE_EXACT  = "^((13[0-9])|(14[5,7])|(15[0-3,5-9])|(16[6])|(17[0,1,3,5-8])|(18[0-9])|(19[1,8,9]))\\d{8}$";
+    public static final String REGEX_MOBILE_EXACT  = "^((13[0-9])|(14[57])|(15[0-35-9])|(16[2567])|(17[01235-8])|(18[0-9])|(19[189]))\\d{8}$";
     /**
      * Regex of telephone number.
      */
-    public static final String REGEX_TEL           = "^0\\d{2,3}[- ]?\\d{7,8}";
+    public static final String REGEX_TEL           = "^0\\d{2,3}[- ]?\\d{7,8}$";
     /**
      * Regex of id card number which length is 15.
      */
@@ -84,6 +84,10 @@ public final class RegexConstants {
      */
     public static final String REGEX_CHINA_POSTAL_CODE    = "[1-9]\\d{5}(?!\\d)";
     /**
+     * Regex of integer.
+     */
+    public static final String REGEX_INTEGER              = "^(-?[1-9]\\d*)|0$";
+    /**
      * Regex of positive integer.
      */
     public static final String REGEX_POSITIVE_INTEGER     = "^[1-9]\\d*$";
@@ -91,10 +95,6 @@ public final class RegexConstants {
      * Regex of negative integer.
      */
     public static final String REGEX_NEGATIVE_INTEGER     = "^-[1-9]\\d*$";
-    /**
-     * Regex of integer.
-     */
-    public static final String REGEX_INTEGER              = "^-?[1-9]\\d*$";
     /**
      * Regex of non-negative integer.
      */
@@ -106,11 +106,23 @@ public final class RegexConstants {
     /**
      * Regex of positive float.
      */
+    public static final String REGEX_FLOAT                = "^-?([1-9]\\d*\\.\\d*|0\\.\\d*[1-9]\\d*|0?\\.0+|0)$";
+    /**
+     * Regex of positive float.
+     */
     public static final String REGEX_POSITIVE_FLOAT       = "^[1-9]\\d*\\.\\d*|0\\.\\d*[1-9]\\d*$";
     /**
      * Regex of negative float.
      */
     public static final String REGEX_NEGATIVE_FLOAT       = "^-[1-9]\\d*\\.\\d*|-0\\.\\d*[1-9]\\d*$";
+    /**
+     * Regex of positive float.
+     */
+    public static final String REGEX_NOT_NEGATIVE_FLOAT   = "^[1-9]\\d*\\.\\d*|0\\.\\d*[1-9]\\d*|0?\\.0+|0$";
+    /**
+     * Regex of negative float.
+     */
+    public static final String REGEX_NOT_POSITIVE_FLOAT   = "^(-([1-9]\\d*\\.\\d*|0\\.\\d*[1-9]\\d*))|0?\\.0+|0$";
 
     ///////////////////////////////////////////////////////////////////////////
     // If u want more please visit http://toutiao.com/i6231678548520731137

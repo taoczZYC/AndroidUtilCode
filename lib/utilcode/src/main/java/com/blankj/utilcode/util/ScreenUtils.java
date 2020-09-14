@@ -1,5 +1,6 @@
 package com.blankj.utilcode.util;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.KeyguardManager;
 import android.content.Context;
@@ -161,6 +162,7 @@ public final class ScreenUtils {
      *
      * @param activity The activity.
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     public static void setLandscape(@NonNull final Activity activity) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
     }
@@ -170,6 +172,7 @@ public final class ScreenUtils {
      *
      * @param activity The activity.
      */
+    @SuppressLint("SourceLockedOrientationActivity")
     public static void setPortrait(@NonNull final Activity activity) {
         activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
@@ -234,10 +237,19 @@ public final class ScreenUtils {
      */
     public static Bitmap screenShot(@NonNull final Activity activity, boolean isDeleteStatusBar) {
         View decorView = activity.getWindow().getDecorView();
+        boolean drawingCacheEnabled = decorView.isDrawingCacheEnabled();
+        boolean willNotCacheDrawing = decorView.willNotCacheDrawing();
         decorView.setDrawingCacheEnabled(true);
         decorView.setWillNotCacheDrawing(false);
         Bitmap bmp = decorView.getDrawingCache();
-        if (bmp == null) return null;
+        if (bmp == null || bmp.isRecycled()) {
+            decorView.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            decorView.layout(0, 0, decorView.getMeasuredWidth(), decorView.getMeasuredHeight());
+            decorView.buildDrawingCache();
+            bmp = Bitmap.createBitmap(decorView.getDrawingCache());
+        }
+        if (bmp == null || bmp.isRecycled()) return null;
         DisplayMetrics dm = new DisplayMetrics();
         activity.getWindowManager().getDefaultDisplay().getMetrics(dm);
         Bitmap ret;
@@ -256,6 +268,8 @@ public final class ScreenUtils {
             ret = Bitmap.createBitmap(bmp, 0, 0, dm.widthPixels, dm.heightPixels);
         }
         decorView.destroyDrawingCache();
+        decorView.setWillNotCacheDrawing(willNotCacheDrawing);
+        decorView.setDrawingCacheEnabled(drawingCacheEnabled);
         return ret;
     }
 

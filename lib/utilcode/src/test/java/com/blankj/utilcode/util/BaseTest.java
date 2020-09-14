@@ -1,6 +1,5 @@
 package com.blankj.utilcode.util;
 
-
 import android.support.annotation.NonNull;
 
 import org.junit.Test;
@@ -24,6 +23,11 @@ import java.util.concurrent.Executor;
 @Config(manifest = Config.NONE, shadows = {ShadowLog.class})
 public class BaseTest {
 
+    @BusUtils.Bus(tag = "base")
+    public void noParamFun(int i) {
+        System.out.println("base" + i);
+    }
+
     public BaseTest() {
         ShadowLog.stream = System.out;
         ThreadUtils.setDeliver(new Executor() {
@@ -37,6 +41,5 @@ public class BaseTest {
 
     @Test
     public void test() throws Exception {
-
     }
 }

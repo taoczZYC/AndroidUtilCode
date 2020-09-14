@@ -14,10 +14,15 @@ import android.support.annotation.AnimRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityOptionsCompat;
+import android.support.v4.app.Fragment;
 import android.support.v4.util.Pair;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,13 +40,34 @@ public final class ActivityUtils {
     }
 
     /**
-     * Return the activity by view.
+     * Add callbacks of activity lifecycle.
      *
-     * @param view The view.
-     * @return the activity by view.
+     * @param activity  The activity.
+     * @param callbacks The callbacks.
      */
-    public static Activity getActivityByView(@NonNull View view) {
-        return getActivityByContext(view.getContext());
+    public static void addActivityLifecycleCallbacks(final Activity activity,
+                                                     final Utils.ActivityLifecycleCallbacks callbacks) {
+        UtilsBridge.addActivityLifecycleCallbacks(activity, callbacks);
+    }
+
+    /**
+     * Remove callbacks of activity lifecycle.
+     *
+     * @param activity The activity.
+     */
+    public static void removeActivityLifecycleCallbacks(final Activity activity) {
+        UtilsBridge.removeActivityLifecycleCallbacks(activity);
+    }
+
+    /**
+     * Remove callbacks of activity lifecycle.
+     *
+     * @param activity  The activity.
+     * @param callbacks The callbacks.
+     */
+    public static void removeActivityLifecycleCallbacks(final Activity activity,
+                                                        final Utils.ActivityLifecycleCallbacks callbacks) {
+        UtilsBridge.removeActivityLifecycleCallbacks(activity, callbacks);
     }
 
     /**
@@ -51,12 +77,43 @@ public final class ActivityUtils {
      * @return the activity by context.
      */
     public static Activity getActivityByContext(Context context) {
-        if (context instanceof Activity) return (Activity) context;
+        Activity activity = getActivityByContextInner(context);
+        if (!isActivityAlive(activity)) return null;
+        return activity;
+    }
+
+    private static Activity getActivityByContextInner(Context context) {
+        if (context == null) return null;
+        List<Context> list = new ArrayList<>();
         while (context instanceof ContextWrapper) {
             if (context instanceof Activity) {
                 return (Activity) context;
             }
+            Activity activity = getActivityFromDecorContext(context);
+            if (activity != null) return activity;
+            list.add(context);
             context = ((ContextWrapper) context).getBaseContext();
+            if (context == null) {
+                return null;
+            }
+            if (list.contains(context)) {
+                // loop context
+                return null;
+            }
+        }
+        return null;
+    }
+
+    private static Activity getActivityFromDecorContext(Context context) {
+        if (context == null) return null;
+        if (context.getClass().getName().equals("com.android.internal.policy.DecorContext")) {
+            try {
+                Field mActivityContextField = context.getClass().getDeclaredField("mActivityContext");
+                mActivityContextField.setAccessible(true);
+                //noinspection ConstantConditions,unchecked
+                return ((WeakReference<Activity>) mActivityContextField.get(context)).get();
+            } catch (Exception ignore) {
+            }
         }
         return null;
     }
@@ -72,9 +129,10 @@ public final class ActivityUtils {
                                            @NonNull final String cls) {
         Intent intent = new Intent();
         intent.setClassName(pkg, cls);
-        return !(Utils.getApp().getPackageManager().resolveActivity(intent, 0) == null ||
-                intent.resolveActivity(Utils.getApp().getPackageManager()) == null ||
-                Utils.getApp().getPackageManager().queryIntentActivities(intent, 0).size() == 0);
+        PackageManager pm = Utils.getApp().getPackageManager();
+        return !(pm.resolveActivity(intent, 0) == null ||
+                intent.resolveActivity(pm) == null ||
+                pm.queryIntentActivities(intent, 0).size() == 0);
     }
 
     /**
@@ -83,7 +141,7 @@ public final class ActivityUtils {
      * @param clz The activity class.
      */
     public static void startActivity(@NonNull final Class<? extends Activity> clz) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, null, context.getPackageName(), clz.getName(), null);
     }
 
@@ -95,7 +153,7 @@ public final class ActivityUtils {
      */
     public static void startActivity(@NonNull final Class<? extends Activity> clz,
                                      @Nullable final Bundle options) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, null, context.getPackageName(), clz.getName(), options);
     }
 
@@ -111,7 +169,7 @@ public final class ActivityUtils {
     public static void startActivity(@NonNull final Class<? extends Activity> clz,
                                      @AnimRes final int enterAnim,
                                      @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, null, context.getPackageName(), clz.getName(),
                 getOptionsBundle(context, enterAnim, exitAnim));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
@@ -187,7 +245,7 @@ public final class ActivityUtils {
      */
     public static void startActivity(@NonNull final Bundle extras,
                                      @NonNull final Class<? extends Activity> clz) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, extras, context.getPackageName(), clz.getName(), null);
     }
 
@@ -201,7 +259,7 @@ public final class ActivityUtils {
     public static void startActivity(@NonNull final Bundle extras,
                                      @NonNull final Class<? extends Activity> clz,
                                      @Nullable final Bundle options) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, extras, context.getPackageName(), clz.getName(), options);
     }
 
@@ -219,7 +277,7 @@ public final class ActivityUtils {
                                      @NonNull final Class<? extends Activity> clz,
                                      @AnimRes final int enterAnim,
                                      @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, extras, context.getPackageName(), clz.getName(),
                 getOptionsBundle(context, enterAnim, exitAnim));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
@@ -303,7 +361,7 @@ public final class ActivityUtils {
      */
     public static void startActivity(@NonNull final String pkg,
                                      @NonNull final String cls) {
-        startActivity(Utils.getTopActivityOrApp(), null, pkg, cls, null);
+        startActivity(UtilsBridge.getTopActivityOrApp(), null, pkg, cls, null);
     }
 
     /**
@@ -316,7 +374,7 @@ public final class ActivityUtils {
     public static void startActivity(@NonNull final String pkg,
                                      @NonNull final String cls,
                                      @Nullable final Bundle options) {
-        startActivity(Utils.getTopActivityOrApp(), null, pkg, cls, options);
+        startActivity(UtilsBridge.getTopActivityOrApp(), null, pkg, cls, options);
     }
 
     /**
@@ -333,7 +391,7 @@ public final class ActivityUtils {
                                      @NonNull final String cls,
                                      @AnimRes final int enterAnim,
                                      @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, null, pkg, cls, getOptionsBundle(context, enterAnim, exitAnim));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
             ((Activity) context).overridePendingTransition(enterAnim, exitAnim);
@@ -416,7 +474,7 @@ public final class ActivityUtils {
     public static void startActivity(@NonNull final Bundle extras,
                                      @NonNull final String pkg,
                                      @NonNull final String cls) {
-        startActivity(Utils.getTopActivityOrApp(), extras, pkg, cls, null);
+        startActivity(UtilsBridge.getTopActivityOrApp(), extras, pkg, cls, null);
     }
 
     /**
@@ -431,7 +489,7 @@ public final class ActivityUtils {
                                      @NonNull final String pkg,
                                      @NonNull final String cls,
                                      @Nullable final Bundle options) {
-        startActivity(Utils.getTopActivityOrApp(), extras, pkg, cls, options);
+        startActivity(UtilsBridge.getTopActivityOrApp(), extras, pkg, cls, options);
     }
 
     /**
@@ -450,7 +508,7 @@ public final class ActivityUtils {
                                      @NonNull final String cls,
                                      @AnimRes final int enterAnim,
                                      @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivity(context, extras, pkg, cls, getOptionsBundle(context, enterAnim, exitAnim));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
             ((Activity) context).overridePendingTransition(enterAnim, exitAnim);
@@ -537,7 +595,7 @@ public final class ActivityUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean startActivity(@NonNull final Intent intent) {
-        return startActivity(intent, Utils.getTopActivityOrApp(), null);
+        return startActivity(intent, UtilsBridge.getTopActivityOrApp(), null);
     }
 
     /**
@@ -549,7 +607,7 @@ public final class ActivityUtils {
      */
     public static boolean startActivity(@NonNull final Intent intent,
                                         @Nullable final Bundle options) {
-        return startActivity(intent, Utils.getTopActivityOrApp(), options);
+        return startActivity(intent, UtilsBridge.getTopActivityOrApp(), options);
     }
 
     /**
@@ -565,7 +623,7 @@ public final class ActivityUtils {
     public static boolean startActivity(@NonNull final Intent intent,
                                         @AnimRes final int enterAnim,
                                         @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         boolean isSuccess = startActivity(intent, context, getOptionsBundle(context, enterAnim, exitAnim));
         if (isSuccess) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
@@ -949,12 +1007,315 @@ public final class ActivityUtils {
     }
 
     /**
+     * Start the activity.
+     *
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode) {
+        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, null);
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param options     Additional options for how the Activity should be started.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              @Nullable final Bundle options) {
+        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, options);
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param fragment       The fragment.
+     * @param clz            The activity class.
+     * @param requestCode    if &gt;= 0, this code will be returned in
+     *                       onActivityResult() when the activity exits.
+     * @param sharedElements The names of the shared elements to transfer to the called
+     *                       Activity and their associated Views.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              final View... sharedElements) {
+        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, getOptionsBundle(fragment, sharedElements));
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param enterAnim   A resource ID of the animation resource to use for the
+     *                    incoming activity.
+     * @param exitAnim    A resource ID of the animation resource to use for the
+     *                    outgoing activity.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              @AnimRes final int enterAnim,
+                                              @AnimRes final int exitAnim) {
+        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode) {
+        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, null);
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param options     Additional options for how the Activity should be started.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              @Nullable final Bundle options) {
+        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, options);
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param extras         The Bundle of extras to add to this intent.
+     * @param fragment       The fragment.
+     * @param clz            The activity class.
+     * @param requestCode    if &gt;= 0, this code will be returned in
+     *                       onActivityResult() when the activity exits.
+     * @param sharedElements The names of the shared elements to transfer to the called
+     *                       Activity and their associated Views.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              final View... sharedElements) {
+        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, getOptionsBundle(fragment, sharedElements));
+    }
+
+    /**
+     * Start the activity.
+     *
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param fragment    The fragment.
+     * @param clz         The activity class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param enterAnim   A resource ID of the animation resource to use for the
+     *                    incoming activity.
+     * @param exitAnim    A resource ID of the animation resource to use for the
+     *                    outgoing activity.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final Class<? extends Activity> clz,
+                                              final int requestCode,
+                                              @AnimRes final int enterAnim,
+                                              @AnimRes final int exitAnim) {
+        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+                requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param fragment    The fragment.
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param pkg         The name of the package.
+     * @param cls         The name of the class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final String pkg,
+                                              @NonNull final String cls,
+                                              final int requestCode) {
+        startActivityForResult(fragment, extras, pkg, cls, requestCode, null);
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param fragment    The fragment.
+     * @param pkg         The name of the package.
+     * @param cls         The name of the class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param options     Additional options for how the Activity should be started.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final String pkg,
+                                              @NonNull final String cls,
+                                              final int requestCode,
+                                              @Nullable final Bundle options) {
+        startActivityForResult(fragment, extras, pkg, cls, requestCode, options);
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param extras         The Bundle of extras to add to this intent.
+     * @param fragment       The fragment.
+     * @param pkg            The name of the package.
+     * @param cls            The name of the class.
+     * @param requestCode    if &gt;= 0, this code will be returned in
+     *                       onActivityResult() when the activity exits.
+     * @param sharedElements The names of the shared elements to transfer to the called
+     *                       Activity and their associated Views.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final String pkg,
+                                              @NonNull final String cls,
+                                              final int requestCode,
+                                              final View... sharedElements) {
+        startActivityForResult(fragment, extras, pkg, cls,
+                requestCode, getOptionsBundle(fragment, sharedElements));
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param extras      The Bundle of extras to add to this intent.
+     * @param pkg         The name of the package.
+     * @param cls         The name of the class.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param enterAnim   A resource ID of the animation resource to use for the
+     *                    incoming activity.
+     * @param exitAnim    A resource ID of the animation resource to use for the
+     *                    outgoing activity.
+     */
+    public static void startActivityForResult(@NonNull final Bundle extras,
+                                              @NonNull final Fragment fragment,
+                                              @NonNull final String pkg,
+                                              @NonNull final String cls,
+                                              final int requestCode,
+                                              @AnimRes final int enterAnim,
+                                              @AnimRes final int exitAnim) {
+        startActivityForResult(fragment, extras, pkg, cls,
+                requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param fragment    The fragment.
+     * @param intent      The description of the activity to start.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Intent intent,
+                                              final int requestCode) {
+        startActivityForResult(intent, fragment, requestCode, null);
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param fragment    The fragment.
+     * @param intent      The description of the activity to start.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param options     Additional options for how the Activity should be started.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Intent intent,
+                                              final int requestCode,
+                                              @Nullable final Bundle options) {
+        startActivityForResult(intent, fragment, requestCode, options);
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param fragment       The fragment.
+     * @param intent         The description of the activity to start.
+     * @param requestCode    if &gt;= 0, this code will be returned in
+     *                       onActivityResult() when the activity exits.
+     * @param sharedElements The names of the shared elements to transfer to the called
+     *                       Activity and their associated Views.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Intent intent,
+                                              final int requestCode,
+                                              final View... sharedElements) {
+        startActivityForResult(intent, fragment,
+                requestCode, getOptionsBundle(fragment, sharedElements));
+    }
+
+    /**
+     * Start the activity for result.
+     *
+     * @param fragment    The fragment.
+     * @param intent      The description of the activity to start.
+     * @param requestCode if &gt;= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
+     * @param enterAnim   A resource ID of the animation resource to use for the
+     *                    incoming activity.
+     * @param exitAnim    A resource ID of the animation resource to use for the
+     *                    outgoing activity.
+     */
+    public static void startActivityForResult(@NonNull final Fragment fragment,
+                                              @NonNull final Intent intent,
+                                              final int requestCode,
+                                              @AnimRes final int enterAnim,
+                                              @AnimRes final int exitAnim) {
+        startActivityForResult(intent, fragment,
+                requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
+    }
+
+    /**
      * Start activities.
      *
      * @param intents The descriptions of the activities to start.
      */
     public static void startActivities(@NonNull final Intent[] intents) {
-        startActivities(intents, Utils.getTopActivityOrApp(), null);
+        startActivities(intents, UtilsBridge.getTopActivityOrApp(), null);
     }
 
     /**
@@ -965,7 +1326,7 @@ public final class ActivityUtils {
      */
     public static void startActivities(@NonNull final Intent[] intents,
                                        @Nullable final Bundle options) {
-        startActivities(intents, Utils.getTopActivityOrApp(), options);
+        startActivities(intents, UtilsBridge.getTopActivityOrApp(), options);
     }
 
     /**
@@ -980,7 +1341,7 @@ public final class ActivityUtils {
     public static void startActivities(@NonNull final Intent[] intents,
                                        @AnimRes final int enterAnim,
                                        @AnimRes final int exitAnim) {
-        Context context = Utils.getTopActivityOrApp();
+        Context context = UtilsBridge.getTopActivityOrApp();
         startActivities(intents, context, getOptionsBundle(context, enterAnim, exitAnim));
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN && context instanceof Activity) {
             ((Activity) context).overridePendingTransition(enterAnim, exitAnim);
@@ -1034,7 +1395,7 @@ public final class ActivityUtils {
     /**
      * Start home activity.
      */
-    public static void startHomeActivity() throws SecurityException {
+    public static void startHomeActivity() {
         Intent homeIntent = new Intent(Intent.ACTION_MAIN);
         homeIntent.addCategory(Intent.CATEGORY_HOME);
         homeIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -1054,7 +1415,9 @@ public final class ActivityUtils {
      * @param pkg The name of the package.
      */
     public static void startLauncherActivity(@NonNull final String pkg) {
-        startActivity(pkg, getLauncherActivity(pkg));
+        String launcherActivity = getLauncherActivity(pkg);
+        if (TextUtils.isEmpty(launcherActivity)) return;
+        startActivity(pkg, launcherActivity);
     }
 
     /**
@@ -1063,7 +1426,7 @@ public final class ActivityUtils {
      * @return the list of activity
      */
     public static List<Activity> getActivityList() {
-        return Utils.getActivityList();
+        return UtilsBridge.getActivityList();
     }
 
     /**
@@ -1082,16 +1445,48 @@ public final class ActivityUtils {
      * @return the name of launcher activity
      */
     public static String getLauncherActivity(@NonNull final String pkg) {
+        if (UtilsBridge.isSpace(pkg)) return "";
         Intent intent = new Intent(Intent.ACTION_MAIN, null);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setPackage(pkg);
         PackageManager pm = Utils.getApp().getPackageManager();
         List<ResolveInfo> info = pm.queryIntentActivities(intent, 0);
-        ResolveInfo next = info.iterator().next();
-        if (next != null) {
-            return next.activityInfo.name;
+        if (info == null || info.size() == 0) {
+            return "";
         }
-        return "no launcher activity of " + pkg;
+        return info.get(0).activityInfo.name;
+    }
+
+    /**
+     * Return the list of main activities.
+     *
+     * @return the list of main activities
+     */
+    public static List<String> getMainActivities() {
+        return getMainActivities(Utils.getApp().getPackageName());
+    }
+
+    /**
+     * Return the list of main activities.
+     *
+     * @param pkg The name of the package.
+     * @return the list of main activities
+     */
+    public static List<String> getMainActivities(@NonNull final String pkg) {
+        List<String> ret = new ArrayList<>();
+        Intent intent = new Intent(Intent.ACTION_MAIN, null);
+        intent.setPackage(pkg);
+        PackageManager pm = Utils.getApp().getPackageManager();
+        List<ResolveInfo> info = pm.queryIntentActivities(intent, 0);
+        int size = info.size();
+        if (size == 0) return ret;
+        for (int i = 0; i < size; i++) {
+            ResolveInfo ri = info.get(i);
+            if (ri.activityInfo.processName.equals(pkg)) {
+                ret.add(ri.activityInfo.name);
+            }
+        }
+        return ret;
     }
 
     /**
@@ -1100,7 +1495,7 @@ public final class ActivityUtils {
      * @return the top activity in activity's stack
      */
     public static Activity getTopActivity() {
-        return Utils.getActivityLifecycle().getTopActivity();
+        return UtilsBridge.getTopActivity();
     }
 
     /**
@@ -1131,7 +1526,7 @@ public final class ActivityUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isActivityExistsInStack(@NonNull final Activity activity) {
-        List<Activity> activities = Utils.getActivityList();
+        List<Activity> activities = UtilsBridge.getActivityList();
         for (Activity aActivity : activities) {
             if (aActivity.equals(activity)) {
                 return true;
@@ -1147,7 +1542,7 @@ public final class ActivityUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isActivityExistsInStack(@NonNull final Class<? extends Activity> clz) {
-        List<Activity> activities = Utils.getActivityList();
+        List<Activity> activities = UtilsBridge.getActivityList();
         for (Activity aActivity : activities) {
             if (aActivity.getClass().equals(clz)) {
                 return true;
@@ -1211,7 +1606,7 @@ public final class ActivityUtils {
      */
     public static void finishActivity(@NonNull final Class<? extends Activity> clz,
                                       final boolean isLoadAnim) {
-        List<Activity> activities = Utils.getActivityList();
+        List<Activity> activities = UtilsBridge.getActivityList();
         for (Activity activity : activities) {
             if (activity.getClass().equals(clz)) {
                 activity.finish();
@@ -1234,7 +1629,7 @@ public final class ActivityUtils {
     public static void finishActivity(@NonNull final Class<? extends Activity> clz,
                                       @AnimRes final int enterAnim,
                                       @AnimRes final int exitAnim) {
-        List<Activity> activities = Utils.getActivityList();
+        List<Activity> activities = UtilsBridge.getActivityList();
         for (Activity activity : activities) {
             if (activity.getClass().equals(clz)) {
                 activity.finish();
@@ -1264,16 +1659,15 @@ public final class ActivityUtils {
     public static boolean finishToActivity(@NonNull final Activity activity,
                                            final boolean isIncludeSelf,
                                            final boolean isLoadAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; --i) {
-            Activity aActivity = activities.get(i);
-            if (aActivity.equals(activity)) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (act.equals(activity)) {
                 if (isIncludeSelf) {
-                    finishActivity(aActivity, isLoadAnim);
+                    finishActivity(act, isLoadAnim);
                 }
                 return true;
             }
-            finishActivity(aActivity, isLoadAnim);
+            finishActivity(act, isLoadAnim);
         }
         return false;
     }
@@ -1292,16 +1686,15 @@ public final class ActivityUtils {
                                            final boolean isIncludeSelf,
                                            @AnimRes final int enterAnim,
                                            @AnimRes final int exitAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; --i) {
-            Activity aActivity = activities.get(i);
-            if (aActivity.equals(activity)) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (act.equals(activity)) {
                 if (isIncludeSelf) {
-                    finishActivity(aActivity, enterAnim, exitAnim);
+                    finishActivity(act, enterAnim, exitAnim);
                 }
                 return true;
             }
-            finishActivity(aActivity, enterAnim, exitAnim);
+            finishActivity(act, enterAnim, exitAnim);
         }
         return false;
     }
@@ -1327,16 +1720,15 @@ public final class ActivityUtils {
     public static boolean finishToActivity(@NonNull final Class<? extends Activity> clz,
                                            final boolean isIncludeSelf,
                                            final boolean isLoadAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; --i) {
-            Activity aActivity = activities.get(i);
-            if (aActivity.getClass().equals(clz)) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (act.getClass().equals(clz)) {
                 if (isIncludeSelf) {
-                    finishActivity(aActivity, isLoadAnim);
+                    finishActivity(act, isLoadAnim);
                 }
                 return true;
             }
-            finishActivity(aActivity, isLoadAnim);
+            finishActivity(act, isLoadAnim);
         }
         return false;
     }
@@ -1355,16 +1747,15 @@ public final class ActivityUtils {
                                            final boolean isIncludeSelf,
                                            @AnimRes final int enterAnim,
                                            @AnimRes final int exitAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; --i) {
-            Activity aActivity = activities.get(i);
-            if (aActivity.getClass().equals(clz)) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (act.getClass().equals(clz)) {
                 if (isIncludeSelf) {
-                    finishActivity(aActivity, enterAnim, exitAnim);
+                    finishActivity(act, enterAnim, exitAnim);
                 }
                 return true;
             }
-            finishActivity(aActivity, enterAnim, exitAnim);
+            finishActivity(act, enterAnim, exitAnim);
         }
         return false;
     }
@@ -1387,11 +1778,10 @@ public final class ActivityUtils {
      */
     public static void finishOtherActivities(@NonNull final Class<? extends Activity> clz,
                                              final boolean isLoadAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; i--) {
-            Activity activity = activities.get(i);
-            if (!activity.getClass().equals(clz)) {
-                finishActivity(activity, isLoadAnim);
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (!act.getClass().equals(clz)) {
+                finishActivity(act, isLoadAnim);
             }
         }
     }
@@ -1408,11 +1798,10 @@ public final class ActivityUtils {
     public static void finishOtherActivities(@NonNull final Class<? extends Activity> clz,
                                              @AnimRes final int enterAnim,
                                              @AnimRes final int exitAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 1; i >= 0; i--) {
-            Activity activity = activities.get(i);
-            if (!activity.getClass().equals(clz)) {
-                finishActivity(activity, enterAnim, exitAnim);
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (Activity act : activities) {
+            if (!act.getClass().equals(clz)) {
+                finishActivity(act, enterAnim, exitAnim);
             }
         }
     }
@@ -1430,13 +1819,12 @@ public final class ActivityUtils {
      * @param isLoadAnim True to use animation for the outgoing activity, false otherwise.
      */
     public static void finishAllActivities(final boolean isLoadAnim) {
-        List<Activity> activityList = Utils.getActivityList();
-        for (int i = activityList.size() - 1; i >= 0; --i) {// remove from top
-            Activity activity = activityList.get(i);
+        List<Activity> activityList = UtilsBridge.getActivityList();
+        for (Activity act : activityList) {
             // sActivityList remove the index activity at onActivityDestroyed
-            activity.finish();
+            act.finish();
             if (!isLoadAnim) {
-                activity.overridePendingTransition(0, 0);
+                act.overridePendingTransition(0, 0);
             }
         }
     }
@@ -1451,12 +1839,11 @@ public final class ActivityUtils {
      */
     public static void finishAllActivities(@AnimRes final int enterAnim,
                                            @AnimRes final int exitAnim) {
-        List<Activity> activityList = Utils.getActivityList();
-        for (int i = activityList.size() - 1; i >= 0; --i) {// remove from top
-            Activity activity = activityList.get(i);
+        List<Activity> activityList = UtilsBridge.getActivityList();
+        for (Activity act : activityList) {
             // sActivityList remove the index activity at onActivityDestroyed
-            activity.finish();
-            activity.overridePendingTransition(enterAnim, exitAnim);
+            act.finish();
+            act.overridePendingTransition(enterAnim, exitAnim);
         }
     }
 
@@ -1473,8 +1860,8 @@ public final class ActivityUtils {
      * @param isLoadAnim True to use animation for the outgoing activity, false otherwise.
      */
     public static void finishAllActivitiesExceptNewest(final boolean isLoadAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 2; i >= 0; i--) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (int i = 1; i < activities.size(); i++) {
             finishActivity(activities.get(i), isLoadAnim);
         }
     }
@@ -1489,8 +1876,8 @@ public final class ActivityUtils {
      */
     public static void finishAllActivitiesExceptNewest(@AnimRes final int enterAnim,
                                                        @AnimRes final int exitAnim) {
-        List<Activity> activities = Utils.getActivityList();
-        for (int i = activities.size() - 2; i >= 0; i--) {
+        List<Activity> activities = UtilsBridge.getActivityList();
+        for (int i = 1; i < activities.size(); i++) {
             finishActivity(activities.get(i), enterAnim, exitAnim);
         }
     }
@@ -1572,7 +1959,7 @@ public final class ActivityUtils {
                                       final String pkg,
                                       final String cls,
                                       @Nullable final Bundle options) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Intent intent = new Intent();
         if (extras != null) intent.putExtras(extras);
         intent.setComponent(new ComponentName(pkg, cls));
         startActivity(intent, context, options);
@@ -1609,7 +1996,7 @@ public final class ActivityUtils {
                                                   final String cls,
                                                   final int requestCode,
                                                   @Nullable final Bundle options) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+        Intent intent = new Intent();
         if (extras != null) intent.putExtras(extras);
         intent.setComponent(new ComponentName(pkg, cls));
         return startActivityForResult(intent, activity, requestCode, options);
@@ -1646,10 +2033,57 @@ public final class ActivityUtils {
         }
     }
 
+    private static boolean startActivityForResult(final Fragment fragment,
+                                                  final Bundle extras,
+                                                  final String pkg,
+                                                  final String cls,
+                                                  final int requestCode,
+                                                  @Nullable final Bundle options) {
+        Intent intent = new Intent();
+        if (extras != null) intent.putExtras(extras);
+        intent.setComponent(new ComponentName(pkg, cls));
+        return startActivityForResult(intent, fragment, requestCode, options);
+    }
+
+    private static boolean startActivityForResult(final Intent intent,
+                                                  final Fragment fragment,
+                                                  final int requestCode,
+                                                  @Nullable final Bundle options) {
+        if (!isIntentAvailable(intent)) {
+            Log.e("ActivityUtils", "intent is unavailable");
+            return false;
+        }
+        if (fragment.getActivity() == null) {
+            Log.e("ActivityUtils", "Fragment " + fragment + " not attached to Activity");
+            return false;
+        }
+        if (options != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            fragment.startActivityForResult(intent, requestCode, options);
+        } else {
+            fragment.startActivityForResult(intent, requestCode);
+        }
+        return true;
+    }
+
+    private static Bundle getOptionsBundle(final Fragment fragment,
+                                           final int enterAnim,
+                                           final int exitAnim) {
+        Activity activity = fragment.getActivity();
+        if (activity == null) return null;
+        return ActivityOptionsCompat.makeCustomAnimation(activity, enterAnim, exitAnim).toBundle();
+    }
+
     private static Bundle getOptionsBundle(final Context context,
                                            final int enterAnim,
                                            final int exitAnim) {
         return ActivityOptionsCompat.makeCustomAnimation(context, enterAnim, exitAnim).toBundle();
+    }
+
+    private static Bundle getOptionsBundle(final Fragment fragment,
+                                           final View[] sharedElements) {
+        Activity activity = fragment.getActivity();
+        if (activity == null) return null;
+        return getOptionsBundle(activity, sharedElements);
     }
 
     private static Bundle getOptionsBundle(final Activity activity,

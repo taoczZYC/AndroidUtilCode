@@ -2,10 +2,10 @@
 
 Gradle:
 ```groovy
-implementation 'com.blankj:utilcode:1.25.0'
+implementation 'com.blankj:utilcode:1.29.0'
 
 // if u use AndroidX, use the following
-implementation 'com.blankj:utilcodex:1.25.0'
+implementation 'com.blankj:utilcodex:1.29.0'
 ```
 
 
@@ -13,7 +13,9 @@ implementation 'com.blankj:utilcodex:1.25.0'
 
 * ### About Activity -> [ActivityUtils.java][activity.java] -> [Demo][activity.demo]
 ```
-getActivityByView
+addActivityLifecycleCallbacks
+removeActivityLifecycleCallbacks
+getAliveActivityByContext
 getActivityByContext
 isActivityExists
 startActivity
@@ -22,6 +24,7 @@ startActivities
 startHomeActivity
 getActivityList
 getLauncherActivity
+getMainActivities
 getTopActivity
 isActivityAlive
 isActivityExistsInStack
@@ -39,6 +42,11 @@ adaptHeight
 closeAdapt
 pt2Px
 px2Pt
+```
+
+* ### About Api -> [ApiUtils.java][api.java] -> [README][api.readme]
+```
+getApi
 ```
 
 * ### About App -> [AppUtils.java][app.java] -> [Demo][app.demo]
@@ -72,16 +80,55 @@ getAppsInfo
 getApkInfo
 ```
 
+* ### About Array -> [ArrayUtils.java][array.java] -> [Test][array.test]
+```
+newArray
+newLongArray
+newIntArray
+newShortArray
+newCharArray
+newByteArray
+newDoubleArray
+newFloatArray
+newBooleanArray
+isEmpty
+getLength
+isSameLength
+get
+set
+equals
+reverse
+copy
+subArray
+add
+remove
+removeElement
+indexOf
+lastIndexOf
+contains
+toPrimitive
+toObject
+asList
+asUnmodifiableList
+asArrayList
+asLinkedList
+sort
+forAllDo
+toString
+```
+
 * ### About Bar -> [BarUtils.java][bar.java] -> [Demo][bar.demo]
 ```
 getStatusBarHeight
 setStatusBarVisibility
 isStatusBarVisible
 setStatusBarLightMode
+isStatusBarLightMode
 addMarginTopEqualStatusBarHeight
 subtractMarginTopEqualStatusBarHeight
 setStatusBarColor
 setStatusBarColor4Drawer
+transparentStatusBar
 getActionBarHeight
 setNotificationBarVisibility
 getNavBarHeight
@@ -90,6 +137,8 @@ isNavBarVisible
 setNavBarColor
 getNavBarColor
 isSupportNavBar
+setNavBarLightMode
+isNavBarLightMode
 ```
 
 * ### About Brightness -> [BrightnessUtils.java][brightness.java] -> [Demo][brightness.demo]
@@ -219,9 +268,14 @@ cleanCustomDir
 
 * ### About Click -> [ClickUtils.java][click.java] -> [Demo][click.demo]
 ```
-applyScale
+applyPressedViewScale
+applyPressedViewAlpha
+applyPressedBgAlpha
+applyPressedBgDark
 applySingleDebouncing
 applyGlobalDebouncing
+expandClickArea
+back2HomeFriendly
 ClickUtils#OnDebouncingClickListener
 ClickUtils#OnMultiClickListener
 ```
@@ -235,6 +289,46 @@ deepClone
 ```
 closeIO
 closeIOQuietly
+```
+
+* ### About Collection -> [CollectionUtils.java][collection.java] -> [Test][collection.test]
+```
+newUnmodifiableList[NotNull]: 新建只读[非空]链表
+newArrayList[NotNull]       : 新建数组型[非空]链表
+newLinkedList[NotNull]      : 新建指针型[非空]链表
+newHashSet[NotNull]         : 新建哈希[非空]集合
+newTreeSet[NotNull]         : 新建有序[非空]集合
+newSynchronizedCollection
+newUnmodifiableCollection
+union
+intersection
+disjunction
+subtract
+containsAny
+getCardinalityMap
+isSubCollection
+isProperSubCollection
+isEqualCollection
+cardinality
+find
+forAllDo
+filter
+select
+selectRejected
+transform
+collect
+countMatches
+exists
+addIgnoreNull
+addAll
+get
+size
+sizeIsEmpty
+isEmpty
+isNotEmpty
+retainAll
+removeAll
+toString
 ```
 
 * ### About Color -> [ColorUtils.java][color.java]
@@ -252,9 +346,16 @@ getRandomColor
 
 * ### About Convert -> [ConvertUtils.java][convert.java] -> [Test][convert.test]
 ```
+int2HexString, hexString2Int
 bytes2Bits, bits2Bytes
 bytes2Chars, chars2Bytes
 bytes2HexString, hexString2Bytes
+bytes2String, string2Bytes
+bytes2JSONObject, jsonObject2Bytes
+bytes2JSONArray, jsonArray2Bytes
+bytes2Parcelable, parcelable2Bytes
+bytes2Object, serializable2Bytes
+bytes2Bitmap, bitmap2Bytes
 memorySize2Byte, byte2MemorySize
 byte2FitMemorySize
 timeSpan2Millis, millis2TimeSpan
@@ -264,7 +365,7 @@ inputStream2Bytes, bytes2InputStream
 outputStream2Bytes, bytes2OutputStream
 inputStream2String, string2InputStream
 outputStream2String, string2OutputStream
-bitmap2Bytes, bytes2Bitmap
+inputStream2Lines
 drawable2Bitmap, bitmap2Drawable
 drawable2Bytes, bytes2Drawable
 view2Bitmap
@@ -290,6 +391,8 @@ getModel
 getABIs
 isTablet
 isEmulator
+getUniqueDeviceId
+isSameDevice
 ```
 
 * ### About Flashlight -> [FlashlightUtils.java][flashlight.java] -> [Demo][flashlight.demo]
@@ -309,6 +412,8 @@ base64Encode2String
 base64Decode
 htmlEncode
 htmlDecode
+binaryEncode
+binaryDecode
 ```
 
 * ### About Encrypt -> [EncryptUtils.java][encrypt.java] -> [Test][encrypt.test]
@@ -335,6 +440,7 @@ encryptAES, encryptAES2HexString, encryptAES2Base64
 decryptAES, decryptHexStringAES, decryptBase64AES
 encryptRSA, encryptRSA2HexString, encryptRSA2Base64
 decryptRSA, decryptHexStringRSA, decryptBase64RSA
+rc4
 ```
 
 * ### About FileIO -> [FileIOUtils.java][fileIo.java] -> [Test][fileIo.test]
@@ -362,13 +468,9 @@ isFile
 createOrExistsDir
 createOrExistsFile
 createFileByDeleteOldFile
-copyDir
-copyFile
-moveDir
-moveFile
+copy
+move
 delete
-deleteDir
-deleteFile
 deleteAllInDir
 deleteFilesInDir
 deleteFilesInDirWithFilter
@@ -377,16 +479,17 @@ listFilesInDirWithFilter
 getFileLastModified
 getFileCharsetSimple
 getFileLines
-getDirSize
-getFileSize
-getDirLength
-getFileLength
+getSize
+getLength
 getFileMD5
 getFileMD5ToString
 getDirName
 getFileName
 getFileNameNoExtension
 getFileExtension
+notifySystemToScan
+getFsTotalSize
+getFsAvailableSize
 ```
 
 * ### About Fragment -> [FragmentUtils.java][fragment.java] -> [Demo][fragment.demo]
@@ -419,6 +522,8 @@ setBackground
 
 * ### About Gson -> [GsonUtils.java][gson.java] -> [Test][gson.test]
 ```
+setGsonDelegate
+setGson
 getGson
 toJson
 fromJson
@@ -493,6 +598,9 @@ clickBlankArea2HideSoftInput
 ```
 applySystemLanguage
 applyLanguage
+isAppliedSystemLanguage
+isAppliedLanguage
+getCurrentLocale
 ```
 
 * ### About Log -> [LogUtils.java][log.java] -> [Demo][log.demo]
@@ -531,6 +639,21 @@ json
 xml
 ```
 
+* ### About Map -> [MapUtils.java][map.java] -> [Test][map.test]
+```
+newUnmodifiableMap
+newHashMap
+newLinkedHashMap
+newTreeMap
+newHashTable
+isEmpty
+isNotEmpty
+size
+forAllDo
+transform
+toString
+```
+
 * ### About MetaData -> [MetaDataUtils.java][metaData.java] -> [Demo][metaData.demo]
 ```
 getMetaDataInApp
@@ -543,24 +666,42 @@ getMetaDataInReceiver
 ```
 openWirelessSettings
 isConnected
-isAvailable[Async]      : 判断网络是否可用
-isAvailableByPing[Async]: 用 ping 判断网络是否可用
-isAvailableByDns[Async] : 用 DNS 判断网络是否可用
+isAvailable[Async]                      : 判断网络是否可用
+isAvailableByPing[Async]                : 用 ping 判断网络是否可用
+isAvailableByDns[Async]                 : 用 DNS 判断网络是否可用
 getMobileDataEnabled
 isMobileData
 is4G
 getWifiEnabled
 setWifiEnabled
 isWifiConnected
-isWifiAvailable[Async]  : 判断 wifi 数据是否可用
+isWifiAvailable[Async]                  : 判断 wifi 数据是否可用
 getNetworkOperatorName
 getNetworkType
-getIPAddress[Async]     : 获取 IP 地址
-getDomainAddress[Async] : 获取域名 IP 地址
+getIPAddress[Async]                     : 获取 IP 地址
+getDomainAddress[Async]                 : 获取域名 IP 地址
 getIpAddressByWifi
 getGatewayByWifi
 getNetMaskByWifi
 getServerAddressByWifi
+registerNetworkStatusChangedListener
+isRegisteredNetworkStatusChangedListener
+unregisterNetworkStatusChangedListener
+```
+
+* ### About Notification -> [NotificationUtils.java][notification.java] -> [Demo][notification.demo]
+```
+areNotificationsEnabled
+notify
+cancel
+cancelAll
+setNotificationBarVisibility
+```
+
+* ### About Number -> [NumberUtils.java][number.java] -> [Test][number.test]
+```
+format
+float2Double
 ```
 
 * ### About Object -> [ObjectUtils.java][object.java] -> [Test][object.test]
@@ -568,13 +709,16 @@ getServerAddressByWifi
 isEmpty
 isNotEmpty
 equals
-requireNonNull
+compare
+requireNonNull(s)
 getOrDefault
-hashCode
+toString
+hashCode(s)
 ```
 
 * ### About Path -> [PathUtils.java][path.java] -> [Demo][path.demo]
 ```
+join
 getRootPath
 getDataPath
 getDownloadCachePath
@@ -611,6 +755,10 @@ getExternalAppDownloadPath
 getExternalAppDcimPath
 getExternalAppDocumentsPath
 getExternalAppObbPath
+getRootPathExternalFirst
+getAppDataPathExternalFirst
+getFilesPathExternalFirst
+getCachePathExternalFirst
 ```
 
 * ### About Permission -> [PermissionUtils.java][permission.java] -> [Demo][permission.demo]
@@ -641,11 +789,9 @@ getPhoneType
 isSimCardReady
 getSimOperatorName
 getSimOperatorByMnc
-getPhoneStatus
 dial
 call
 sendSms
-sendSmsSilent
 ```
 
 * ### About Process -> [ProcessUtils.java][process.java] -> [Demo][process.demo]
@@ -685,10 +831,35 @@ getMatches
 getSplits
 getReplaceFirst
 getReplaceAll
+RegexConstants.REGEX_DOUBLE_BYTE_CHAR
+RegexConstants.REGEX_BLANK_LINE
+RegexConstants.REGEX_QQ_NUM
+RegexConstants.REGEX_CHINA_POSTAL_CODE
+RegexConstants.REGEX_INTEGER
+RegexConstants.REGEX_POSITIVE_INTEGER
+RegexConstants.REGEX_NEGATIVE_INTEGER
+RegexConstants.REGEX_NOT_NEGATIVE_INTEGER
+RegexConstants.REGEX_NOT_POSITIVE_INTEGER
+RegexConstants.REGEX_FLOAT
+RegexConstants.REGEX_POSITIVE_FLOAT
+RegexConstants.REGEX_NEGATIVE_FLOAT
+RegexConstants.REGEX_NOT_NEGATIVE_FLOAT
+RegexConstants.REGEX_NOT_POSITIVE_FLOAT
 ```
 
 * ### About Resource -> [ResourceUtils.java][resource.java] -> [Demo][resource.demo]
 ```
+getDrawable
+getIdByName
+getStringIdByName
+getColorIdByName
+getDimenIdByName
+getDrawableIdByName
+getMipmapIdByName
+getLayoutIdByName
+getStyleIdByName
+getAnimIdByName
+getMenuIdByName
 copyFileFromAssets
 readAssets2String
 readAssets2List
@@ -750,6 +921,11 @@ getSleepDuration
 isSDCardEnableByEnvironment
 getSDCardPathByEnvironment
 getSDCardInfo
+getMountedSDCardPath
+getExternalTotalSize
+getExternalAvailableSize
+getInternalTotalSize
+getInternalAvailableSize
 ```
 
 * ### About Service -> [ServiceUtils.java][service.java]
@@ -760,6 +936,11 @@ stopService
 bindService
 unbindService
 isServiceRunning
+```
+
+* ### About Shadow -> [ShadowUtils.java][shadow.java] -> [Demo][shadow.demo]
+```
+apply
 ```
 
 * ### About Shell -> [ShellUtils.java][shell.java]
@@ -877,11 +1058,16 @@ lowerFirstLetter
 reverse
 toDBC
 toSBC
+getString
+getStringArray
 ```
 
 * ### About Thread -> [ThreadUtils.java][thread.java] -> [Test][thread.test]
 ```
 isMainThread
+getMainHandler
+runOnUiThread
+runOnUiThreadDelayed
 getFixedPool
 getSinglePool
 getCachedPool
@@ -911,6 +1097,7 @@ setDeliver
 
 * ### About Time -> [TimeUtils.java][time.java] -> [Test][time.test]
 ```
+getSafeDateFormat
 millis2String
 string2Millis
 string2Date
@@ -935,6 +1122,8 @@ isToday
 isLeapYear
 getChineseWeek
 getUSWeek
+isAm
+isPm
 getValueByCalendarField
 getChineseZodiac
 getZodiac
@@ -954,16 +1143,49 @@ showCustomLong
 cancel
 ```
 
+* ### About Touch -> [TouchUtils.java][touch.java]
+```
+setOnTouchListener
+```
+
+* ### About UiMessage -> [UiMessageUtils.java][uiMessage.java] -> [Demo][uiMessage.demo]
+```
+send
+addListener
+removeListener
+```
+
 * ### About Uri -> [UriUtils.java][uri.java]
 ```
+res2Uri
 file2Uri
 uri2File
+uri2Bytes
+```
+
+* ### UtilsTransActivity -> [UtilsTransActivity.java][trans.java]
+```
+start
+```
+
+* ### UtilsTransActivity4MainProcess -> [UtilsTransActivity4MainProcess.java][trans4Main.java]
+```
+start
 ```
 
 * ### About Vibrate -> [VibrateUtils.java][vibrate.java] -> [Demo][vibrate.demo]
 ```
 vibrate
 cancel
+```
+
+* ### About View -> [ViewUtils.java][view.java]
+```
+setViewEnabled
+runOnUiThread
+runOnUiThreadDelayed
+isLayoutRtl
+fixScrollViewTopping
 ```
 
 * ### About Zip -> [ZipUtils.java][zip.java] -> [Test][zip.test]
@@ -978,14 +1200,24 @@ getComments
 
 
 
+
+
+
+
 [activity.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ActivityUtils.java
 [activity.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/activity/ActivityActivity.kt
 
 [adaptScreen.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/AdaptScreenUtils.java
 [adaptScreen.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/adaptScreen/AdaptScreenActivity.kt
 
+[api.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ApiUtils.java
+[api.readme]: https://github.com/Blankj/AndroidUtilCode/blob/master/plugin/api-gradle-plugin
+
 [app.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/AppUtils.java
 [app.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/app/AppActivity.kt
+
+[array.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ArrayUtils.java
+[array.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/ArrayUtilsTest.java
 
 [bar.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/BarUtils.java
 [bar.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/bar/BarActivity.kt
@@ -994,7 +1226,7 @@ getComments
 [brightness.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/brightness/BrightnessActivity.kt
 
 [bus.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/BusUtils.java
-[bus.readme]: https://github.com/Blankj/AndroidUtilCode/blob/master/utilcode/README-STATIC-BUS.md
+[bus.readme]: https://github.com/Blankj/AndroidUtilCode/blob/master/plugin/bus-gradle-plugin
 
 [cacheDiskStatic.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/CacheDiskStaticUtils.java
 [cacheDiskStatic.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/CacheDiskStaticUtilsTest.java
@@ -1024,6 +1256,9 @@ getComments
 [clone.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/CloneUtilsTest.java
 
 [close.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/CloseUtils.java
+
+[collection.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/CollectionUtils.java
+[collection.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/CollectionUtilsTest.java
 
 [color.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ColorUtils.java
 [color.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/ColorUtilsTest.java
@@ -1074,11 +1309,20 @@ getComments
 [log.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/LogUtils.java
 [log.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/log/LogActivity.kt
 
+[map.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/MapUtils.java
+[map.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/MapUtilsTest.java
+
 [metaData.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/MetaDataUtils.java
 [metaData.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/metaData/MetaDataActivity.kt
 
 [network.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/NetworkUtils.java
 [network.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/network/NetworkActivity.kt
+
+[notification.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/NotificationUtils.java
+[notification.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/notification/NotificationActivity.kt
+
+[number.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/NumberUtils.java
+[number.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/NumberUtilsTest.java
 
 [object.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ObjectUtils.java
 [object.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/ObjectUtilsTest.java
@@ -1115,6 +1359,9 @@ getComments
 
 [service.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ServiceUtils.java
 
+[shadow.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ShadowUtils.java
+[shadow.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/shadow/ShadowActivity.kt
+
 [shell.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ShellUtils.java
 
 [size.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/SizeUtils.java
@@ -1142,10 +1389,21 @@ getComments
 [toast.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ToastUtils.java
 [toast.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/toast/ToastActivity.kt
 
+[touch.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/TouchUtils.java
+
+[uiMessage.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/UiMessageUtils.java
+[uiMessage.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/uiMessage/UiMessageActivity.kt
+
 [uri.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/UriUtils.java
+
+[trans.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/UtilsTransActivity.java
+
+[trans4Main.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/UtilsTransActivity4MainProcess.java
 
 [vibrate.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/VibrateUtils.java
 [vibrate.demo]: https://github.com/Blankj/AndroidUtilCode/blob/master/feature/utilcode/pkg/src/main/java/com/blankj/utilcode/pkg/feature/vibrate/VibrateActivity.kt
+
+[view.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ViewUtils.java
 
 [zip.java]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/main/java/com/blankj/utilcode/util/ZipUtils.java
 [zip.test]: https://github.com/Blankj/AndroidUtilCode/blob/master/lib/utilcode/src/test/java/com/blankj/utilcode/util/ZipUtilsTest.java

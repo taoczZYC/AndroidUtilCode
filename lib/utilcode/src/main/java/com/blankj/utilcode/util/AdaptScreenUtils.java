@@ -8,10 +8,21 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * <pre>
+ *     author: Blankj
+ *     blog  : http://blankj.com
+ *     time  : 2018/11/15
+ *     desc  : utils about adapt screen
+ * </pre>
+ */
 public final class AdaptScreenUtils {
 
     private static List<Field> sMetricsFields;
+
+    private AdaptScreenUtils() {
+        throw new UnsupportedOperationException("u can't instantiate me...");
+    }
 
     /**
      * Adapt for the horizontal screen, and call it in {@link android.app.Activity#getResources()}.
@@ -87,6 +98,19 @@ public final class AdaptScreenUtils {
         applyOtherDisplayMetrics(resources, newXdpi);
     }
 
+    static Runnable getPreLoadRunnable() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                preLoad();
+            }
+        };
+    }
+
+    private static void preLoad() {
+        applyDisplayMetrics(Resources.getSystem(), Resources.getSystem().getDisplayMetrics().xdpi);
+    }
+
     private static void applyOtherDisplayMetrics(final Resources resources, final float newXdpi) {
         if (sMetricsFields == null) {
             sMetricsFields = new ArrayList<>();
@@ -129,8 +153,7 @@ public final class AdaptScreenUtils {
     private static DisplayMetrics getMetricsFromField(final Resources resources, final Field field) {
         try {
             return (DisplayMetrics) field.get(resources);
-        } catch (Exception e) {
-            Log.e("AdaptScreenUtils", "getMetricsFromField: " + e);
+        } catch (Exception ignore) {
             return null;
         }
     }

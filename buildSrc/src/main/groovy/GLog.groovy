@@ -91,7 +91,7 @@ class GLog {
             sb.append("[")
             list.each { v ->
                 if (v instanceof Map || v instanceof List) {
-                    sb.append(String.format("$LogConst.LINE_SEP%${deep++ * 8}s${object2String(v)},", "", k))
+                    sb.append(String.format("$LogConst.LINE_SEP%${deep++ * 8}s${object2String(v)},", ""))
                     deep--
                 } else {
                     sb.append(String.format("$LogConst.LINE_SEP%${deep * 8}s$v,", ""))

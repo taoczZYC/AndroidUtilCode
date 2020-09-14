@@ -2,24 +2,26 @@ package com.blankj.utilcode.pkg.feature.api
 
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
-import android.view.View
-import com.blankj.common.CommonTitleActivity
+import com.blankj.common.activity.CommonActivity
+import com.blankj.common.activity.CommonActivityItemsView
+import com.blankj.common.activity.CommonActivityTitleView
+import com.blankj.common.item.CommonItem
+import com.blankj.common.item.CommonItemClick
 import com.blankj.utilcode.pkg.R
 import com.blankj.utilcode.pkg.feature.api.other.export.OtherModuleApi
 import com.blankj.utilcode.util.ApiUtils
+import com.blankj.utilcode.util.CollectionUtils
 import com.blankj.utilcode.util.ToastUtils
-import kotlinx.android.synthetic.main.activity_api.*
 
 /**
  * ```
  * author: Blankj
  * blog  : http://blankj.com
  * time  : 2019/03/12
- * desc  : demo about BusUtils
+ * desc  : demo about ApiUtils
  * ```
  */
-class ApiActivity : CommonTitleActivity() {
+class ApiActivity : CommonActivity() {
 
     companion object {
         fun start(context: Context) {
@@ -28,38 +30,18 @@ class ApiActivity : CommonTitleActivity() {
         }
     }
 
-    override fun bindTitle(): CharSequence {
-        return getString(R.string.demo_api)
+    override fun bindTitleRes(): Int {
+        return R.string.demo_api
     }
 
-    override fun initData(bundle: Bundle?) {}
-
-    override fun bindLayout(): Int {
-        return R.layout.activity_api
-    }
-
-    override fun initView(savedInstanceState: Bundle?, contentView: View?) {
-        applyDebouncingClickListener(
-                apiInvokeWithParams,
-                apiInvokeWithReturnValue
-        )
-    }
-
-    override fun doBusiness() {}
-
-    override fun onDebouncingClick(view: View) {
-        val api = ApiUtils.getApi(OtherModuleApi::class.java)
-        when (view.id) {
-            R.id.apiInvokeWithParams -> {
-                api.invokeWithParams(OtherModuleApi.ApiBean("params"))
-            }
-            R.id.apiInvokeWithReturnValue -> {
-                ToastUtils.showShort(api.invokeWithReturnValue().name)
-            }
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
+    override fun bindItems(): List<CommonItem<*>> {
+        return CollectionUtils.newArrayList(
+                CommonItemClick(R.string.api_invoke_with_params) {
+                    ApiUtils.getApi(OtherModuleApi::class.java).invokeWithParams(OtherModuleApi.ApiBean("params"))
+                },
+                CommonItemClick(R.string.api_invoke_with_return_value) {
+                    ToastUtils.showShort(ApiUtils.getApi(OtherModuleApi::class.java).invokeWithReturnValue().name)
+                }
+        );
     }
 }

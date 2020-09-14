@@ -29,6 +29,7 @@ public class BusClassVisitor extends ClassVisitor {
     private String  tag;
     private String  funParamDesc;
     private String  mBusUtilsClass;
+    private boolean isStartVisitParams;
 
     public BusClassVisitor(ClassVisitor classVisitor, Map<String, List<BusInfo>> busMap, String busUtilsClass) {
         super(Opcodes.ASM5, classVisitor);
@@ -47,6 +48,7 @@ public class BusClassVisitor extends ClassVisitor {
         if (cv == null) return null;
         MethodVisitor mv = cv.visitMethod(access, funName, desc, signature, exceptions);
         busInfo = null;
+        isStartVisitParams = false;
         mv = new AdviceAdapter(Opcodes.ASM5, mv, access, funName, desc) {
             @Override
             public AnnotationVisitor visitAnnotation(String desc1, boolean visible) {
@@ -62,6 +64,8 @@ public class BusClassVisitor extends ClassVisitor {
                                 tag = (String) value;
                             } else if ("sticky".equals(name) && (Boolean) value) {
                                 busInfo.sticky = true;
+                            } else if ("priority".equals(name)) {
+                                busInfo.priority = (int) value;
                             }
                         }
 
@@ -81,6 +85,10 @@ public class BusClassVisitor extends ClassVisitor {
             public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
                 super.visitLocalVariable(name, desc, signature, start, end, index);// 获取方法参数信息
                 if (busInfo != null && !funParamDesc.equals("")) {
+                    if (!isStartVisitParams && index != 0) {
+                        return;
+                    }
+                    isStartVisitParams = true;
                     if ("this".equals(name)) {
                         return;
                     }
@@ -100,15 +108,6 @@ public class BusClassVisitor extends ClassVisitor {
                     if (infoList == null) {
                         infoList = new ArrayList<>();
                         mBusMap.put(tag, infoList);
-                    } else if (infoList.size() == 0) {
-                        mBusMap.put(tag, infoList);
-                    } else if (infoList.size() == 1) {
-                        BusInfo info0 = infoList.get(0);
-                        info0.isTagRepeat = true;
-
-                        busInfo.isTagRepeat = true;
-                    } else {
-                        busInfo.isTagRepeat = true;
                     }
                     infoList.add(busInfo);
                 }

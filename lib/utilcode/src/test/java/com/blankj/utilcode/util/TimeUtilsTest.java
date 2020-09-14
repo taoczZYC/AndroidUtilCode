@@ -23,7 +23,7 @@ import static org.junit.Assert.assertTrue;
  *     desc  : test TimeUtils
  * </pre>
  */
-public class TimeUtilsTest {
+public class TimeUtilsTest extends BaseTest {
 
     private final DateFormat defaultFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault());
     private final DateFormat mFormat       = new SimpleDateFormat("yyyy MM dd HH:mm:ss", Locale.getDefault());
@@ -36,7 +36,7 @@ public class TimeUtilsTest {
     private final Date   tomorrowTimeDate         = new Date(tomorrowTimeMillis);
     private final String tomorrowTimeString       = defaultFormat.format(tomorrowTimeDate);
     private final String tomorrowTimeStringFormat = mFormat.format(tomorrowTimeDate);
-    private final long   delta                    = 10;// 允许误差 10ms
+    private final long   delta                    = 20;// 允许误差 10ms
 
     @Test
     public void millis2String() {
@@ -232,6 +232,16 @@ public class TimeUtilsTest {
         assertEquals("Thursday", TimeUtils.getUSWeek(timeDate));
         assertEquals("Thursday", TimeUtils.getUSWeek(timeMillis));
     }
+
+    //@Test
+    //public void isAm() {
+    //    assertFalse(TimeUtils.isAm(timeMillis));
+    //}
+    //
+    //@Test
+    //public void isPm() {
+    //    assertTrue(TimeUtils.isPm(timeMillis));
+    //}
 
     @Test
     public void getWeekIndex() {
